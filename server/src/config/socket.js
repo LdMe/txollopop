@@ -2,7 +2,7 @@
 import { Server } from "socket.io";
 
 let io;
-
+let userSockets;
 export const initSocket = (httpServer) => {
     io = new Server(httpServer, {
         cors: {
@@ -11,7 +11,7 @@ export const initSocket = (httpServer) => {
         }
     });
 
-    const userSockets = new Map(); // userId -> socket.id
+    userSockets = new Map(); // userId -> socket.id
 
     io.on("connection", (socket) => {
         console.log("Usuario conectado:", socket.id);
@@ -19,6 +19,7 @@ export const initSocket = (httpServer) => {
         socket.on("register", (userId) => {
             userSockets.set(userId, socket.id);
             console.log(`Usuario ${userId} registrado con socket ${socket.id}`);
+            console.log(userSockets)
         });
 
         socket.on("disconnect", () => {
@@ -39,5 +40,5 @@ export const getIO = () => {
     if (!io) {
         throw new Error("Socket.io no está inicializado");
     }
-    return io;
+    return {io, userSockets};
 };

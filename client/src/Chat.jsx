@@ -3,17 +3,18 @@ import { io } from "socket.io-client";
 
 // Usuario hardcodeado para pruebas
 const DUMMY_USER = {
-  _id: "67850d96d2806bcc53340825",
+  _id: "678526bbd00f8281539c72ad",
   name: "Usuario Test"
 };
 
-const CHAT_ID = "67850db8d2806bcc53340827";
+const CHAT_ID = "678526f5d00f8281539c72b4";
 const BACKEND_URL = "http://localhost:3002";
 const ChatTest = () => {
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [user,setUser] = useState(DUMMY_USER);
 
   useEffect(() => {
     // Conectar al socket
@@ -23,14 +24,15 @@ const ChatTest = () => {
       console.log("Conectado al socket");
       setConnected(true);
       // Registrar el usuario
-      newSocket.emit("register", DUMMY_USER._id);
+      newSocket.emit("register", user._id);
     });
 
     newSocket.on("newMessage", ({ chatId, message }) => {
+        console.log("new message", message);
       setMessages(prev => [...prev, {
         chatId,
         ...message,
-        isOwn: message.sender === DUMMY_USER._id
+        isOwn: message.sender === user._id
       }]);
     });
 
@@ -39,7 +41,7 @@ const ChatTest = () => {
     return () => {
       newSocket.close();
     };
-  }, []);
+  }, [user]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -54,14 +56,14 @@ const ChatTest = () => {
         },
         body: JSON.stringify({
           message: message,
-          sender: DUMMY_USER._id
+          sender: user._id
         }),
       });
 
       if (response.ok) {
         setMessages(prev => [...prev, {
           message,
-          sender: DUMMY_USER._id,
+          sender: user._id,
           timestamp: new Date(),
           isOwn: true
         }]);
@@ -76,7 +78,11 @@ const ChatTest = () => {
     <div className="p-4 max-w-md mx-auto">
       <div className="mb-4 p-4 bg-gray-100 rounded-lg">
         <p className="font-bold">Estado: {connected ? 'Conectado' : 'Desconectado'}</p>
-        <p className="text-sm">Usuario: {DUMMY_USER.name}</p>
+        <p className="text-sm">Usuario: </p>
+        <label htmlFor="name">Nombre:</label>
+        <input type="text" value={user.name} onChange={(e) => setUser({ ...user, name: e.target.value })} />
+        <label htmlFor="_id">ID:</label>
+        <input type="text" value={user._id} onChange={(e) => setUser({ ...user, _id: e.target.value })} />
       </div>
 
       <div className="mb-4 h-96 overflow-y-auto border rounded-lg p-4">

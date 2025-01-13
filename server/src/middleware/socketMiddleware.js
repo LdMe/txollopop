@@ -1,6 +1,8 @@
 import { getIO } from "../config/socket.js";
 
 export const socketMiddleware = (req, res, next) => {
-    req.io = getIO();
+    const {io, userSockets}= getIO();
+    req.io = io;
+    req.userSockets = userSockets;
     next();
 };

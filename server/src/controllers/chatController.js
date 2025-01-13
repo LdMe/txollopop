@@ -51,6 +51,12 @@ async function addMessage(req,res){
             })
         }
         chat.messages.push({message,sender});
+        console.log(req.userSockets)
+        const receiver = chat.buyer.toString() === sender.toString() ? chat.seller : chat.buyer;
+        const userSocket = req.userSockets.get(receiver.toString());
+        const formattedMessage = chat.messages.find((m) => m.sender.toString() === sender.toString() && m.message === message);
+        console.log("formattedMessage",formattedMessage)
+        req.io.to(userSocket).emit("newMessage", {chatId, message:formattedMessage});
         await chat.save();
         return res.status(200).json(chat);
     } catch (error) {
