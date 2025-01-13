@@ -6,8 +6,10 @@ dotenv.config();
 const PORT = 3000;
 const app = express();
 
+app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));// configurar body parser para recibir datos de formularios
 app.use(express.json());// configurar body parser para recibir datos en formato json
+
 app.get("/", (req,res)=>{
     res.send("Hello World");
 })
