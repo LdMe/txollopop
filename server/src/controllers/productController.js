@@ -17,7 +17,6 @@ async function createProduct(req, res) {
 
         // Si hay archivos, moverlos a la carpeta del producto y actualizar las rutas
         if (req.files && req.files.length > 0) {
-            const tempDir = 'uploads/products/temp';
             const imagePaths = await moveFiles(req.files, product._id.toString());
             
             // Actualizar el producto con las rutas de las imágenes
