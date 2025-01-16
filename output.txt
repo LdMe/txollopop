@@ -1,0 +1,477 @@
+<<<FILE_START:config/connectDb.js>>>
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const db = mongoose.connection;
+const DB_USER = process.env.MONGO_USER;
+const DB_PASSWORD = process.env.MONGO_PASSWORD;
+const DB_HOST = process.env.MONGO_HOST;
+const DB_PORT = 27017;
+const DB_NAME = process.env.MONGO_DATABASE;
+
+async function connectDb() {
+    try {
+        await mongoose.connect(`mongodb://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin`, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        console.log('Conectado a la base de datos');
+    } catch (error) {
+        console.error(error);
+    }
+}
+export default connectDb;
+<<<FILE_END:config/connectDb.js>>>
+
+<<<FILE_START:controllers/chatController.js>>>
+import Chat from "../models/chatModel.js";
+
+async function createChat(req,res){
+    try {
+        const {product,buyer,seller} = req.body;
+        const chat = await Chat.create({
+            product,
+            buyer,
+            seller
+        })
+        return res.status(201).json(chat);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+async function getById(req,res){
+    try {
+        const {id} = req.params;
+        const chat = await Chat.findById(id);
+        return res.status(200).json(chat);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+async function getAllChatsByUser(req,res){
+    try {
+        const {userId} = req.params;
+        const chats = await Chat.find({$or:[{buyer:userId},{seller:userId}]});
+        return res.status(200).json(chats);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+async function addMessage(req,res){
+    try {
+        const {chatId} = req.params;
+        const {message,sender} = req.body;
+        const chat = await Chat.findById(chatId);
+        if(!chat){
+            return res.status(400).json({
+                message:"El chat no existe"
+            })
+        }
+        chat.messages.push({message,sender});
+        await chat.save();
+        return res.status(200).json(chat);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+
+export default {
+    createChat,
+    addMessage,
+    getAllChatsByUser,
+    getById
+}
+<<<FILE_END:controllers/chatController.js>>>
+
+<<<FILE_START:controllers/productController.js>>>
+import Product from "../models/productModel.js";
+
+async function createProduct(req,res){
+    try {
+        const {name,description,price,images,category,owner} = req.body;
+        const product = await Product.create({
+            name,
+            description,
+            price,
+            images,
+            category,
+            owner
+        })
+        return res.status(201).json(product);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+async function getAllProducts(req,res){
+    try {
+        const {owner,category} = req.body;
+        const filter = {};
+        if(owner){
+            filter.owner = owner;
+        }
+        if(category){
+            filter.category = category;
+        }
+        const products = await Product.find(filter);
+        return res.status(200).json(products);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+async function getProduct(req,res){
+    try {
+        const {id} = req.params;
+        const product = await Product.findById(id);
+        return res.status(200).json(product);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+async function deleteProduct(req,res){
+    try {
+        const {id} = req.params;
+        const product = await Product.findByIdAndDelete(id);
+        return res.status(200).json(product);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+export default {
+    createProduct,
+    getAllProducts,
+    getProduct,
+    deleteProduct
+}
+<<<FILE_END:controllers/productController.js>>>
+
+<<<FILE_START:controllers/userController.js>>>
+import User from "../models/userModel.js";
+
+async function register(req,res){
+    try {
+        const {name,email,password,passwordRepeat} = req.body;
+        if(password !== passwordRepeat){
+            return res.status(400).json({
+                message:"Las contraseñas no coinciden"
+            })
+        }
+        const oldUser = await User.findOne({email:email});
+        if(oldUser){
+            return res.status(400).json({
+                message:"El correo ya esta registrado"
+            })
+        }
+        const user = await User.create({
+            name,
+            email,
+            password
+        })
+        return res.status(201).json(user);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+async function login(req,res){
+    try {
+        const {email,password} = req.body;
+        if(!email || !password){
+            return res.status(400).json({
+                message:"Faltan datos"
+            })
+        }
+        const user = await User.findOne({email:email});
+        if(!user){
+            return res.status(400).json({
+                message:"El correo no esta registrado"
+            })
+        }
+        const isMatch = await user.comparePassword(password);
+        if(!isMatch){
+            return res.status(400).json({
+                message:"La contraseña es incorrecta"
+            })
+        }
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+async function getUser(req,res){
+    try {
+        const {id} = req.params;
+        const user = await User.findById(id);
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message:"Error interno del servidor"
+        })
+    }
+}
+
+
+export default{
+    register,
+    login,
+    getUser
+}
+<<<FILE_END:controllers/userController.js>>>
+
+<<<FILE_START:index.js>>>
+import express from "express";
+import dotenv from "dotenv";
+import connectDb from "./config/connectDb.js";
+import router from "./routes/router.js";
+dotenv.config();
+const PORT = 3000;
+const app = express();
+
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));// configurar body parser para recibir datos de formularios
+app.use(express.json());// configurar body parser para recibir datos en formato json
+
+app.get("/", (req,res)=>{
+    res.send("Hello World");
+})
+
+app.use("",router);
+
+async function startServer(){
+    await connectDb();
+    app.listen(PORT,()=>{
+        console.log(`Server running on port ${PORT}`);
+    })
+}
+
+startServer();
+
+<<<FILE_END:index.js>>>
+
+<<<FILE_START:models/chatModel.js>>>
+import mongoose from "mongoose";
+
+const ChatSchema = new mongoose.Schema({
+    product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+    },
+    buyer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    seller: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    messages: [
+        {
+            sender: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+            },
+            message: {
+                type: String,
+                required: true,
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            }
+        }
+    ]
+}, {
+    timestamps: true,
+});
+
+const Chat = mongoose.model('Chat', ChatSchema);
+
+export default Chat;
+
+<<<FILE_END:models/chatModel.js>>>
+
+<<<FILE_START:models/productModel.js>>>
+import mongoose from "mongoose";
+
+const ProductSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    price: {
+        type: Number,
+        required: true,
+    },
+    images: [
+        {
+            type: String,
+        }
+    ],
+    category: {
+        type: String,
+        required: true,
+    },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    }
+}, {
+    timestamps: true,
+});
+
+const Product = mongoose.model('Product', ProductSchema);
+
+export default Product;
+<<<FILE_END:models/productModel.js>>>
+
+<<<FILE_START:models/userModel.js>>>
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+
+const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+}, {
+    timestamps: true,
+});
+
+UserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+
+UserSchema.methods.comparePassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
+};
+
+const User = mongoose.model('User', UserSchema);
+
+export default User;
+<<<FILE_END:models/userModel.js>>>
+
+<<<FILE_START:routes/router.js>>>
+import { Router } from "express";
+
+import userController from "../controllers/userController.js";
+import productController from "../controllers/productController.js";
+import chatController from "../controllers/chatController.js";
+import upload from "../services/multer.js";
+const router = Router();
+
+// user routes
+router.post("/register",userController.register);
+router.post("/login",userController.login);
+router.get("/user/:id",userController.getUser);
+
+// product routes
+router.get("/products",productController.getAllProducts);
+router.post("/product",upload.array("images",5),productController.createProduct);
+router.get("/product/:id",productController.getProduct);
+router.delete("/product/:id",productController.deleteProduct);
+
+// chat routes
+router.get("/user/:userId/chats",chatController.getAllChatsByUser);
+router.post("/chat",chatController.createChat);
+router.get("/chat/:id",chatController.getById);
+router.post("/chat/:chatId",chatController.addMessage);
+
+export default router;
+
+
+<<<FILE_END:routes/router.js>>>
+
+<<<FILE_START:services/multer.js>>>
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+
+const BASE_PATH = "public/uploads/products";
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const productId = req.body.productId || "temp";
+        const fullPath = path.join(BASE_PATH, productId);
+        if (!fs.existsSync(fullPath)) {
+            fs.mkdirSync(fullPath, { recursive: true });
+        }
+        cb(null, fullPath);
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+})
+
+function fileFilter(req, file, cb) {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png" || file.mimetype === "image/gif") {
+        cb(null, true);
+    } else {
+        cb(new Error('Tipo de archivo no soportado'), false);
+    }
+}
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 1024 * 1024 * 5
+    }
+});
+
+export default upload;
+<<<FILE_END:services/multer.js>>>

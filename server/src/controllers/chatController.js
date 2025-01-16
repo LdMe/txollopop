@@ -3,6 +3,15 @@ import Chat from "../models/chatModel.js";
 async function createChat(req,res){
     try {
         const {product,buyer,seller} = req.body;
+        if(buyer.toString() === seller.toString()){
+            console.log("El usuario no puede ser el mismo");
+            const chat = await Chat.findOne({product,seller});
+            return res.status(200).json(chat);
+        }
+        const oldChat = await Chat.findOne({product,buyer,seller});
+        if(oldChat){
+            return res.status(200).json(oldChat);
+        }
         const chat = await Chat.create({
             product,
             buyer,
@@ -52,6 +61,8 @@ async function addMessage(req,res){
         }
         chat.messages.push({message,sender});
         await chat.save();
+        const receiverId = sender.toString() === chat.buyer.toString() ? chat.seller : chat.buyer;
+        const response = req.emitToUser(receiverId,"product-message",{message,sender,chatId:chat._id});
         return res.status(200).json(chat);
     } catch (error) {
         console.error(error);
