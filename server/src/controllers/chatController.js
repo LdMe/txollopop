@@ -29,6 +29,8 @@ async function getById(req,res){
     try {
         const {id} = req.params;
         const chat = await Chat.findById(id);
+        await chat.populate("product","_id name");
+
         return res.status(200).json(chat);
     } catch (error) {
         console.error(error);
@@ -41,6 +43,10 @@ async function getAllChatsByUser(req,res){
     try {
         const {userId} = req.params;
         const chats = await Chat.find({$or:[{buyer:userId},{seller:userId}]});
+        //populate product
+        for(const chat of chats){
+            await chat.populate("product","_id name");
+        }
         return res.status(200).json(chats);
     } catch (error) {
         console.error(error);

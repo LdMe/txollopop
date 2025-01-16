@@ -1,6 +1,6 @@
-// src/pages/MyProducts.jsx
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { LoginContext } from '../../context/loginContext';
+import { getMyProducts, createProduct, deleteProduct } from '../../utils/api/fetch';
 import './MyProducts.css';
 
 function CreateProductForm({ onSubmit, onCancel }) {
@@ -42,6 +42,8 @@ function CreateProductForm({ onSubmit, onCancel }) {
           id="price"
           type="number"
           name="price"
+          min="0"
+          step="0.01"
           required
         />
       </div>
@@ -58,21 +60,22 @@ function CreateProductForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="form-group">
-        <label htmlFor="images">Images</label>
+        <label htmlFor="images">Images (up to 5)</label>
         <input
           id="images"
           type="file"
           multiple
-          onChange={(e) => setImages(Array.from(e.target.files))}
           accept="image/*"
+          onChange={(e) => setImages(Array.from(e.target.files))}
+          max="5"
         />
       </div>
 
       <div className="form-buttons">
-        <button type="button" className="button button-outline" onClick={onCancel}>
+        <button type="button" className="button-secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="button button-primary">
+        <button type="submit" className="button-primary">
           Create Product
         </button>
       </div>
@@ -81,18 +84,27 @@ function CreateProductForm({ onSubmit, onCancel }) {
 }
 
 function ProductCard({ product, onDelete }) {
+  const imageUrl = product.images?.length > 0 
+    ? `${import.meta.env.VITE_BACKEND_URL}/${product.images[0]}`
+    : 'placeholder-image.jpg';
+
   return (
     <div className="product-card">
-      <h3>{product.name}</h3>
-      <p>{product.description}</p>
-      <p className="product-price">${product.price}</p>
-      <p className="product-category">Category: {product.category}</p>
-      <button 
-        className="button button-outline" 
-        onClick={() => onDelete(product._id)}
-      >
-        Delete Product
-      </button>
+      <div className="product-image">
+        <img src={imageUrl} alt={product.name} />
+      </div>
+      <div className="product-info">
+        <h3>{product.name}</h3>
+        <p className="product-price">${product.price}</p>
+        <p>{product.description}</p>
+        <p className="product-category">Category: {product.category}</p>
+        <button 
+          className="button-delete"
+          onClick={() => onDelete(product._id)}
+        >
+          Delete Product
+        </button>
+      </div>
     </div>
   );
 }
@@ -101,58 +113,70 @@ function MyProducts() {
   const { id } = useContext(LoginContext);
   const [products, setProducts] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadProducts = async () => {
+      if (!id) return;
+      
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products?owner=${id}`);
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
+        const data = await getMyProducts(id);
+        setProducts(data || []);
+      } catch (err) {
+        setError('Failed to load products');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (id) {
-      fetchProducts();
-    }
+    loadProducts();
   }, [id]);
 
   const handleCreateProduct = async (formData) => {
     try {
       formData.append('owner', id);
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/product`, {
-        method: 'POST',
-        body: formData,
-      });
-      const newProduct = await response.json();
+      const newProduct = await createProduct(formData);
       setProducts([...products, newProduct]);
       setShowCreateForm(false);
     } catch (error) {
       console.error('Error creating product:', error);
+      setError('Failed to create product');
     }
   };
 
   const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
     try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/product/${productId}`, {
-        method: 'DELETE',
-      });
+      await deleteProduct(productId);
       setProducts(products.filter(p => p._id !== productId));
     } catch (error) {
       console.error('Error deleting product:', error);
+      setError('Failed to delete product');
     }
   };
 
+  if (loading) {
+    return <div className="loading">Loading your products...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
-    <div className="products-container">
-      <div className="products-header">
+    <div className="my-products-container">
+      <div className="header">
         <h1>My Products</h1>
         <button 
-          className="button button-primary"
+          className="button-primary"
           onClick={() => setShowCreateForm(true)}
         >
-          Create New Product
+          Add New Product
         </button>
       </div>
 
@@ -163,13 +187,17 @@ function MyProducts() {
         />
       ) : (
         <div className="products-grid">
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              onDelete={handleDeleteProduct}
-            />
-          ))}
+          {products.length > 0 ? (
+            products.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                onDelete={handleDeleteProduct}
+              />
+            ))
+          ) : (
+            <p className="no-products">You haven't created any products yet</p>
+          )}
         </div>
       )}
     </div>

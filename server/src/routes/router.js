@@ -4,7 +4,6 @@ import { upload } from "../services/fileService.js";
 import userController from "../controllers/userController.js";
 import productController from "../controllers/productController.js";
 import chatController from "../controllers/chatController.js";
-import upload from "../services/multer.js";
 const router = Router();
 
 // user routes
@@ -14,6 +13,7 @@ router.get("/user/:id",userController.getUser);
 
 // product routes
 router.get("/products",productController.getAllProducts);
+router.get("/user/:userId/products", productController.getMyProducts);
 router.post("/product",upload.array("images",5),productController.createProduct);
 router.get("/product/:id",productController.getProduct);
 router.delete("/product/:id",productController.deleteProduct);

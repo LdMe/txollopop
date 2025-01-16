@@ -1,4 +1,4 @@
-import { moveFiles } from "../services/fileService.js";
+import { moveFiles,deleteProductImages } from "../services/fileService.js";
 import Product from "../models/productModel.js";
 
 async function createProduct(req, res) {
@@ -33,26 +33,47 @@ async function createProduct(req, res) {
     }
 }
 
-async function getAllProducts(req,res){
+async function getAllProducts(req, res) {
     try {
-        const {owner,category} = req.body;
+        const { owner, excludeOwner, category } = req.query;
         const filter = {};
-        if(owner){
+
+        // Filter by owner if specified
+        if (owner) {
             filter.owner = owner;
         }
-        if(category){
+
+        // Exclude products by owner if specified
+        if (excludeOwner) {
+            filter.owner = { $ne: excludeOwner };
+        }
+
+        // Filter by category if specified
+        if (category) {
             filter.category = category;
         }
-        const products = await Product.find(filter);
+
+        const products = await Product.find(filter).populate('owner', 'name');
         return res.status(200).json(products);
     } catch (error) {
         console.error(error);
         return res.status(500).json({
-            message:"Error interno del servidor"
-        })
+            message: "Error interno del servidor"
+        });
     }
 }
-
+async function getMyProducts(req, res) {
+    try {
+        const { userId } = req.params;
+        const products = await Product.find({ owner: userId }).populate('owner', 'name');
+        return res.status(200).json(products);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+    }
+}
 async function getProduct(req,res){
     try {
         const {id} = req.params;
@@ -97,6 +118,7 @@ async function deleteProduct(req, res) {
 export default {
     createProduct,
     getAllProducts,
+    getMyProducts,
     getProduct,
     deleteProduct
 }

@@ -1,7 +1,7 @@
 // src/pages/MyChats.jsx
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoginContext } from '../context/loginContext';
+import { LoginContext } from '../../context/loginContext';
 import './MyChats.css';
 
 function ChatCard({ chat, onClick }) {

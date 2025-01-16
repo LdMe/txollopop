@@ -1,7 +1,7 @@
 import { useLoaderData,useNavigate } from "react-router-dom"
 import { useContext } from "react";
 import { LoginContext } from "../context/loginContext.jsx";
-import { createChat } from "../utils/api/fetch";
+import { createChat } from "../utils/api/fetch.js";
 function Products() {
     const {id} = useContext(LoginContext);
     const navigate = useNavigate();

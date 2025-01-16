@@ -34,7 +34,7 @@ function Login() {
       }
 
       const response = await login(formData.email, formData.password);
-      
+      console.log("logged_in", response);
       if (response._id) {
         setId(response._id);
         navigate('/');

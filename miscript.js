@@ -17,7 +17,7 @@ async function concatenateFiles(directoryPath, outputPath) {
             
             if (entry.isDirectory()) {
                 // si es node_modules ignorarlo
-                if (entry.name === 'node_modules') continue;
+                if (entry.name === 'node_modules' || entry.name === 'public' || entry.name === '.vite' || entry.name === 'dist') continue;
                 // Es un directorio, llamada recursiva
                 await readDirectory(fullPath, relPath);
             } else {

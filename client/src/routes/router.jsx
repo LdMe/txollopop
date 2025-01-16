@@ -5,6 +5,7 @@ import Root from "../pages/Root";
 import { getProducts,getChat } from "../utils/api/fetch";
 import Products from "../pages/Products";
 import Chat from "../pages/Chat";
+import MyChats from "../pages/MyChats";
 import MyProducts from "../pages/MyProducts";
 
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
             {
                 path: "product/:productId",
                 element: <h1>Producto con id</h1>,
+            },
+            {
+                path: "chat/",
+                element: <MyChats/>
             },
             {
                 path: "chat/:chatId",

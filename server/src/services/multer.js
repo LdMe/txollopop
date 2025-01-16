@@ -1,3 +1,7 @@
+/* 
+
+// Ejemplo de clase, lo dejo por tener una referencia.
+
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -34,4 +38,4 @@ const upload = multer({
     }
 });
 
-export default upload;
+export default upload; */
