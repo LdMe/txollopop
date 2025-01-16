@@ -16,6 +16,8 @@ async function concatenateFiles(directoryPath, outputPath) {
             const relPath = join(relativePath, entry.name);
             
             if (entry.isDirectory()) {
+                // si es node_modules ignorarlo
+                if (entry.name === 'node_modules') continue;
                 // Es un directorio, llamada recursiva
                 await readDirectory(fullPath, relPath);
             } else {
@@ -24,6 +26,8 @@ async function concatenateFiles(directoryPath, outputPath) {
                     // Ignoramos el archivo de salida si está en el mismo directorio
                     if (fullPath === outputPath) continue;
                     
+                    //si el archivo es package-lock.json ignorarlo
+                    if (entry.name === 'package-lock.json') continue;
                     // Usamos un formato más distintivo para las rutas
                     output += `\n<<<FILE_START:${relPath}>>>\n`;
                     const content = await fs.readFile(fullPath, 'utf8');

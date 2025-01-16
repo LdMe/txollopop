@@ -1,10 +1,12 @@
 import {createBrowserRouter} from "react-router-dom";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
+import Login from "../pages/Auth/Login";
+import Register from "../pages/Auth/Register";
 import Root from "../pages/Root";
 import { getProducts,getChat } from "../utils/api/fetch";
 import Products from "../pages/Products";
 import Chat from "../pages/Chat";
+import MyProducts from "../pages/MyProducts";
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -14,6 +16,10 @@ const router = createBrowserRouter([
                 path: "",
                 element: <Products/>,
                 loader: getProducts
+            },
+            {
+                path: "product/",
+                element: <MyProducts/>,
             },
             {
                 path: "product/:productId",
@@ -31,7 +37,8 @@ const router = createBrowserRouter([
             {
                 path: "register",
                 element : <Register/>
-            }
+            },
+            
         ]
     },
 ]);

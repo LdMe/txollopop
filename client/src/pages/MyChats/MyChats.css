@@ -1,0 +1,38 @@
+.chats-container {
+    padding: 20px;
+  }
+  
+  .chat-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .chat-card:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .chat-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .chat-product {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .chat-message {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+  }
+  
+  .chat-timestamp {
+    color: #999;
+    font-size: 12px;
+  }
