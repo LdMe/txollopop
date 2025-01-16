@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { upload } from "../services/fileService.js";
 import userController from "../controllers/userController.js";
 import productController from "../controllers/productController.js";
 import chatController from "../controllers/chatController.js";
