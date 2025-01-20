@@ -7,10 +7,11 @@ async function fetchData(route, method = 'GET', data = null) {
             method,
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: "include",
         }
 
-        if (method === 'POST' || method === 'PUT') {
+        if ((method === 'POST' || method === 'PUT') && data) {
             fetchOptions.body = JSON.stringify(data);
         } else if (data) {
             Object.entries(data).forEach(([key, value]) => {
@@ -20,7 +21,7 @@ async function fetchData(route, method = 'GET', data = null) {
                 }
             });
         }
-        console.log(data);
+        console.log("data",data);
         const response = await fetch(url.toString(), fetchOptions);
         return response.json();
     } catch (error) {
@@ -31,6 +32,10 @@ async function fetchData(route, method = 'GET', data = null) {
 
 async function login(email,password){
     return await fetchData(`login`, 'POST',{email,password});
+}
+
+async function logout(){
+    return await fetchData(`logout`, 'POST');
 }
 
 async function register(name,email,password,passwordRepeat){
@@ -71,6 +76,7 @@ async function sendMessage(sender,message,chatId){
 
 export {
     login,
+    logout,
     register,
     getProducts,
     getMyProducts,

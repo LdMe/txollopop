@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { LoginContext } from '../../context/loginContext';
+import { logout } from '../../utils/api/fetch';
 import './Navbar.css';
 
 function Navbar() {
@@ -9,6 +10,7 @@ function Navbar() {
 
   const handleLogout = () => {
     setId(null);
+    logout();
     navigate('/login');
   };
 
